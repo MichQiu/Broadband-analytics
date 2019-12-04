@@ -1,4 +1,5 @@
 tdf = read.csv('Reviews.csv', header=TRUE)
+tdf = subset(tdf, rating > 0)
 
 myText = tdf$text
 
