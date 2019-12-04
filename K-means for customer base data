@@ -1,0 +1,53 @@
+setwd('C:/Users/qiu_m/OneDrive/MICHAEL/MSc/e-BM/Big Data/Group project/SImOut')
+
+install.packages('dummies')
+library(dummies)
+
+
+df = read.csv('Customers.csv')
+df = data.frame(df)
+df = na.omit(df)
+
+
+# Removing irrelevant features
+df = subset(df, select=c('MonthlyRevenue', 'MonthlyMinutes', 'TotalRecurringCharge', 
+                         'OverageMinutes', 'RoamingCalls', 'PercChangeMinutes', 
+                         'PercChangeRevenues', 'MonthsInService', 'BuysViaMailOrder',
+                         'RespondsToMailOffers', 'PrizmCode', 'Occupation', 'MaritalStatus'))
+
+# Dummy variable construction
+dummyval = c('MaritalStatus', 'Occupation', 'PrizmCode', 
+             'BuysViaMailOrder', 'RespondsToMailOffers')
+df = dummy.data.frame(df, names = c(dummyval), sep='_')
+
+
+# Scree plot to determine k
+wss <- (nrow(df)-1)*sum(apply(df,2,var))
+for (i in 2:15) wss[i] <- sum(kmeans(df, centers=i, iter.max=30)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters", ylab="Within groups sum of squares")
+
+
+# Grid search kmeans for k = 6, 8, 10
+kmeansloop = function(){
+  KeyClusters = c(6, 8, 10)
+  FileNum = c('SixthCluster.csv', 'EighthCluster.csv',
+              'TenthCluster.csv')
+  MeansFileNum = c('SixthClusterMeans.csv', 'EighthClusterMeans.csv',
+                   'TenthClusterMeans.csv')	
+  x = 1
+  
+  for (num in KeyClusters){
+    
+    fit = kmeans(df, num)
+    means = aggregate(df, by=list(fit$cluster), FUN=mean)
+    df = data.frame(df, fit$cluster)
+    
+    write.csv(df, file=FileNum[x], row.names=FALSE)
+    write.csv(means, file=MeansFileNum[x], row.names=FALSE)
+    x = x + 1
+  }
+}
+
+kmeansloop()
+
+             
